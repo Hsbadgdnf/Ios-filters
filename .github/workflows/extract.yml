@@ -1,0 +1,31 @@
+name: Extract Native Apple CoreImage iOS LUTs
+
+on:
+  workflow_dispatch: # Lets you trigger it manually with a button in mobile browser
+  push:
+    branches: [ main, master ]
+
+jobs:
+  extract-on-mac:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Swift CoreImage Extractor on Apple Silicon
+        run: |
+          swift extract_ios_luts.swift
+          ls -lh output_cubes/
+
+      - name: Package .cube LUTs for Android
+        uses: actions/upload-artifact@v4
+        with:
+          name: iOS_Authentic_CoreImage_LUTs
+          path: |
+            output_cubes/*.cube
+
+      - name: Optional - Inspect Available Apple PhotoEffect Filters
+        run: |
+          swift -e 'import CoreImage; print(CIFilter.filterNames(inCategory: kCICategoryColorEffect).filter { $0.contains("Photo") })'
+          
