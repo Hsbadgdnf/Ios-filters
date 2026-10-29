@@ -1,7 +1,7 @@
-name: Extract Native Apple CoreImage iOS LUTs
+name: Extract Native Apple CoreImage iOS LUTs and Lightroom XMPs
 
 on:
-  workflow_dispatch: # Lets you trigger it manually with a button in mobile browser
+  workflow_dispatch:
   push:
     branches: [ main, master ]
 
@@ -13,19 +13,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Swift CoreImage Extractor on Apple Silicon
+      - name: 1. Extract 3D .cube LUTs from Apple CoreImage
         run: |
           swift extract_ios_luts.swift
-          ls -lh output_cubes/
 
-      - name: Package .cube LUTs for Android
+      - name: 2. Pack .cube 3D LUTs into Lightroom Mobile .xmp Profiles & Presets
+        run: |
+          python3 cube_to_xmp.py
+
+      - name: 3. Upload All LUTs and XMPs as ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: iOS_Authentic_CoreImage_LUTs
+          name: iOS_Authentic_LUTs_and_Lightroom_XMPs
           path: |
             output_cubes/*.cube
-
-      - name: Optional - Inspect Available Apple PhotoEffect Filters
-        run: |
-          swift -e 'import CoreImage; print(CIFilter.filterNames(inCategory: kCICategoryColorEffect).filter { $0.contains("Photo") })'
-          
+            output_xmp_profiles/*.xmp
+            output_xmp_presets/*.xmp
+            
